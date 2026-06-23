@@ -1,0 +1,616 @@
+﻿<!DOCTYPE html>
+<html lang="zh-cn">
+<head>
+    <meta charset="UTF-8">
+    <title id="meta-title">Han - 2FA 安全主控中心</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css">
+    <style>
+        body { background-color: #f8fafc; color: #0f172a; font-family: -apple-system, sans-serif; overflow-x: hidden; }
+        .blog-card { background: #ffffff; border: 1px solid #e2e8f0; border-radius: 20px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.01); transition: all 0.2s ease; }
+        .blog-card:hover { transform: translateY(-2px); box-shadow: 0 12px 20px -3px rgba(0,0,0,0.03); }
+        .admin-nav-item { padding: 10px 16px; border-radius: 12px; font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+        .front-nav-btn { text-align: left; padding: 8px 12px; border-radius: 10px; font-size: 14px; font-weight: 600; transition: all 0.2s; }
+        
+        #glow-aurora {
+            position: fixed; top: 0; left: 0; width: 120px; height: 120px;
+            background: radial-gradient(circle, rgba(56, 189, 248, 0.15) 0%, rgba(34, 211, 238, 0.05) 50%, rgba(0, 0, 0, 0) 70%);
+            border-radius: 50%; pointer-events: none; z-index: 999999; transform: translate(-50%, -50%);
+            filter: blur(10px); transition: transform 0.1s cubic-bezier(0.25, 1, 0.5, 1); display: none;
+        }
+    </style>
+</head>
+<body class="antialiased">
+
+    <div id="main-site" class="max-w-6xl mx-auto px-8 py-16 flex gap-16">
+        <aside class="w-52 flex-shrink-0">
+            <div id="site-avatar" class="w-20 h-20 bg-gray-200 border border-gray-300 rounded-full flex items-center justify-center font-bold text-gray-500 text-2xl mb-4 select-none">Han</div>
+            <h2 id="site-display-name" class="text-2xl font-extrabold text-gray-900 mb-1 tracking-tight">Han</h2>
+            <div class="flex gap-3 my-3 text-lg"><span>📺</span><span>🎵</span></div>
+            
+            <nav class="flex flex-col gap-1.5 mt-6 text-gray-500">
+                <button id="f-nav-home" onclick="switchFrontTab('home')" class="front-nav-btn text-cyan-600 bg-cyan-50">🏠 主页</button>
+                <button id="f-nav-about" onclick="switchFrontTab('about')" class="front-nav-btn hover:text-gray-900 hover:bg-gray-50">👤 关于</button>
+                <button id="f-nav-archive" onclick="switchFrontTab('archive')" class="front-nav-btn hover:text-gray-900 hover:bg-gray-50">🗂️ 归档</button>
+                <button onclick="openFrontRegisterModal()" class="front-nav-btn hover:text-gray-900 hover:bg-gray-50">👋 读者注册</button>
+            </nav>
+            <div id="site-footer-text" class="mt-24 text-xs text-gray-400 font-mono">© 2026 Han</div>
+        </aside>
+
+        <main class="flex-1">
+            <div id="f-tab-home" class="space-y-6">
+                <div id="front-posts-container" class="space-y-6"></div>
+            </div>
+            <div id="f-tab-about" class="hidden">
+                <div class="blog-card p-10 prose">
+                    <h2 class="text-2xl font-extrabold text-gray-900 mb-6">关于我</h2>
+                    <p class="text-gray-600 text-sm leading-relaxed mb-4">欢迎来到我的个人全栈技术实验室。这里是我记录代码研究、分享数字工具维护经验的极简空间。</p>
+                </div>
+            </div>
+            <div id="f-tab-archive" class="hidden">
+                <div class="blog-card p-10">
+                    <h2 class="text-2xl font-extrabold text-gray-900 mb-6">文章归档</h2>
+                    <div id="front-archive-container" class="space-y-4 border-l-2 border-gray-100 pl-6 ml-2"></div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <div id="auth-modal" class="fixed inset-0 bg-gray-900 bg-opacity-30 backdrop-blur-sm hidden flex items-center justify-center z-50">
+        
+        <div id="admin-login-box" class="bg-white p-8 rounded-2xl border border-gray-200 w-80 shadow-xl hidden">
+            <h3 class="text-gray-900 font-extrabold text-lg text-center tracking-wider mb-2">SECURITY LOGIN</h3>
+            <p class="text-xs text-gray-400 text-center mb-6">后台管理需要 2FA 强认证</p>
+            <div class="space-y-4">
+                <input type="text" id="adm-user" placeholder="管理员/员工账号..." class="w-full py-2.5 px-4 bg-gray-50 border border-gray-200 rounded-xl text-center outline-none text-sm focus:border-cyan-500">
+                <input type="password" id="adm-pass" placeholder="安全访问密码..." class="w-full py-2.5 px-4 bg-gray-50 border border-gray-200 rounded-xl text-center outline-none text-sm focus:border-cyan-500">
+                
+                <div class="flex gap-2">
+                    <input type="text" id="adm-code" placeholder="6位邮件验证码" class="w-3/5 py-2.5 px-4 bg-gray-50 border border-gray-200 rounded-xl text-center outline-none text-sm focus:border-cyan-500">
+                    <button type="button" onclick="sendCodeForLogin()" class="w-2/5 text-xs bg-cyan-600 hover:bg-cyan-700 text-white font-bold rounded-xl transition">获取验证码</button>
+                </div>
+                
+                <button onclick="handleAdminLogin()" class="w-full py-2.5 bg-gray-950 text-white font-bold rounded-xl text-sm hover:bg-gray-800 transition">双重验证并登录</button>
+                <button onclick="closeAuthModal()" class="w-full text-xs text-gray-400 font-bold hover:underline pt-1">取消</button>
+            </div>
+        </div>
+
+        <div id="front-reg-box" class="bg-white p-8 rounded-2xl border border-gray-200 w-80 shadow-xl hidden">
+            <h3 class="text-gray-900 font-extrabold text-lg text-center tracking-wider mb-2">EMAIL REGISTER</h3>
+            <p class="text-xs text-gray-400 text-center mb-6">必须通过真实邮箱核准</p>
+            <div class="space-y-3">
+                <input type="text" id="front-user" placeholder="设置用户名..." class="w-full py-2.5 px-4 bg-gray-50 border border-gray-200 rounded-xl text-center outline-none text-sm focus:border-cyan-500">
+                <input type="email" id="front-email" placeholder="接收验证码的邮箱" class="w-full py-2.5 px-4 bg-gray-50 border border-gray-200 rounded-xl text-center outline-none text-sm focus:border-cyan-500">
+                <input type="password" id="front-pass" placeholder="设置登录密码..." class="w-full py-2.5 px-4 bg-gray-50 border border-gray-200 rounded-xl text-center outline-none text-sm focus:border-cyan-500">
+                <div class="flex gap-2">
+                    <input type="text" id="front-code" placeholder="6位邮件验证码" class="w-3/5 py-2.5 px-4 bg-gray-50 border border-gray-200 rounded-xl text-center outline-none text-sm focus:border-cyan-500">
+                    <button type="button" onclick="sendCodeForRegister()" class="w-2/5 text-xs bg-cyan-600 hover:bg-cyan-700 text-white font-bold rounded-xl transition">获取验证码</button>
+                </div>
+                <button onclick="handleFrontRegister()" class="w-full py-2.5 bg-cyan-600 text-white font-bold rounded-xl text-sm hover:bg-cyan-700 transition mt-2">验证邮箱并加入</button>
+                <button onclick="closeAuthModal()" class="w-full text-xs text-gray-400 font-bold hover:underline pt-2">取消</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="admin-panel" class="max-w-6xl mx-auto px-8 py-16 hidden">
+        <div class="flex items-center justify-between border-b border-gray-200 pb-6 mb-8">
+            <div>
+                <h1 class="text-2xl font-extrabold text-gray-950 flex items-center gap-2">安全总控台 <span id="current-user-badge" class="text-xs font-normal bg-cyan-100 text-cyan-700 px-2.5 py-0.5 rounded-full"></span></h1>
+                <p class="text-xs text-gray-400 mt-1">每次敏感更改及配置下发均需通过邮件安全锁验证</p>
+            </div>
+            <button onclick="exitAdmin()" class="text-xs font-bold text-gray-400 hover:text-gray-600">安全断开</button>
+        </div>
+        
+        <div class="flex gap-8">
+            <div class="w-48 flex-shrink-0 flex flex-col gap-1.5">
+                <div id="tab-btn-global" onclick="switchTab('global')" class="admin-nav-item bg-cyan-600 text-white">⚙️ 网站全局配置</div>
+                <div id="tab-btn-posts" onclick="switchTab('posts')" class="admin-nav-item text-gray-600 hover:bg-gray-100">📝 文章内容管理</div>
+                <div id="tab-btn-users" onclick="switchTab('users')" class="admin-nav-item text-gray-600 hover:bg-gray-100">👥 矩阵与重置中心</div>
+                <div id="tab-btn-profile" onclick="switchTab('profile')" class="admin-nav-item text-gray-600 hover:bg-gray-100">🔒 个人账号安全</div>
+            </div>
+
+            <div class="flex-1">
+                <div id="tab-global" class="space-y-6">
+                    <div class="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm">
+                        <h3 class="text-sm font-bold text-gray-800 mb-4">🏛️ 站点底层配置（修改需验证码）</h3>
+                        <div class="grid grid-cols-2 gap-6 mb-4">
+                            <input type="text" id="cfg-site-name" placeholder="网站名称" class="p-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm outline-none">
+                            <input type="text" id="cfg-site-avatar" placeholder="网站头像" class="p-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm outline-none">
+                        </div>
+                        <input type="text" id="cfg-site-footer" placeholder="页脚版权" class="w-full p-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm outline-none mb-4">
+                        
+                        <div class="p-4 bg-amber-50 border border-amber-200 rounded-xl flex gap-3 items-center mb-4">
+                            <input type="text" id="code-global" placeholder="输入敏感操作验证码" class="w-48 p-2 bg-white border border-gray-200 rounded-lg text-sm outline-none">
+                            <button onclick="sendCodeForAction()" class="px-3 py-2 bg-amber-600 text-white text-xs font-bold rounded-lg hover:bg-amber-700">获取风控验证码</button>
+                        </div>
+                        <button onclick="saveGlobalConfig()" id="btn-save-global" class="px-5 py-2.5 bg-cyan-600 text-white text-xs font-bold rounded-xl hover:bg-cyan-700 transition">执行全局覆写</button>
+                    </div>
+                </div>
+
+                <div id="tab-posts" class="space-y-6 hidden">
+                    <div class="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm">
+                        <h3 class="text-sm font-bold text-gray-800 mb-4">✍️ 撰写新文章 / 编辑</h3>
+                        <div class="space-y-4">
+                            <input type="hidden" id="edit-post-index" value="">
+                            <input type="text" id="input-post-title" placeholder="文章标题" class="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl text-sm outline-none">
+                            <textarea id="input-post-summary" rows="4" placeholder="摘要内容..." class="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl text-sm outline-none resize-none"></textarea>
+                            <button onclick="savePost()" class="px-5 py-2.5 bg-cyan-600 text-white text-xs font-bold rounded-xl hover:bg-cyan-700 transition">安全发布</button>
+                        </div>
+                    </div>
+                    <div class="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm">
+                        <table class="w-full text-left text-sm text-gray-500">
+                            <tbody id="admin-posts-list"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div id="tab-users" class="space-y-6 hidden">
+                    <div id="user-creation-box" class="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm">
+                        <h3 class="text-sm font-bold text-gray-800 mb-4">➕ 指派全新后台管理员 / 协助人员</h3>
+                        <div class="grid grid-cols-3 gap-4 mb-4">
+                            <input type="text" id="add-adm-username" placeholder="后台账号名" class="p-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm outline-none">
+                            <input type="text" id="add-adm-email" placeholder="绑定安全邮箱" class="p-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm outline-none">
+                            <input type="password" id="add-adm-password" placeholder="初始访问密码" class="p-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm outline-none">
+                        </div>
+                        <button onclick="addBackendUser()" class="px-5 py-2.5 bg-gray-950 text-white text-xs font-bold rounded-xl hover:bg-gray-800 transition">内定并核准入库</button>
+                    </div>
+
+                    <div class="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm">
+                        <h3 class="text-sm font-bold text-red-600 mb-3">🛠️ 全局账号清算及密码强制重置矩阵（修改需验证码）</h3>
+                        
+                        <div class="p-4 bg-amber-50 border border-amber-200 rounded-xl flex gap-3 items-center mb-4">
+                            <input type="text" id="code-user-action" placeholder="输入风控验证码" class="w-48 p-2 bg-white border border-gray-200 rounded-lg text-sm outline-none">
+                            <button onclick="sendCodeForAction()" class="px-3 py-2 bg-amber-600 text-white text-xs font-bold rounded-lg hover:bg-amber-700">获取重置授权码</button>
+                        </div>
+
+                        <h4 class="text-xs font-bold text-gray-400 uppercase tracking-wider mt-4 mb-2">后台管理库</h4>
+                        <div class="overflow-x-auto"><table class="w-full text-left text-sm mb-6"><tbody id="table-backend-users"></tbody></table></div>
+                        
+                        <h4 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">前端读者库</h4>
+                        <div class="overflow-x-auto"><table class="w-full text-left text-sm"><tbody id="table-frontend-users"></tbody></table></div>
+                    </div>
+                </div>
+
+                <div id="tab-profile" class="space-y-6 hidden">
+                    <div class="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm">
+                        <h3 class="text-sm font-bold text-gray-800 mb-4">🔒 修改我当前登录的后台账号密码</h3>
+                        <div class="space-y-4 max-w-sm">
+                            <input type="password" id="prof-new-pass" placeholder="设定全新安全密码..." class="w-full p-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm outline-none">
+                            
+                            <div class="p-4 bg-amber-50 border border-amber-200 rounded-xl flex gap-3 items-center">
+                                <input type="text" id="code-profile-action" placeholder="核验码" class="w-28 p-2 bg-white border border-gray-200 rounded-lg text-sm outline-none">
+                                <button onclick="sendCodeForAction()" class="px-3 py-2 bg-amber-600 text-white text-xs font-bold rounded-lg hover:bg-amber-700">获取自身验证码</button>
+                            </div>
+                            
+                            <button onclick="changeMyPassword()" class="px-5 py-2.5 bg-cyan-600 text-white text-xs font-bold rounded-xl hover:bg-cyan-700 transition">确定修改我的密码</button>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <div id="glow-aurora"></div>
+
+    <div id="lark-sandbox-debugger" style="position: fixed; bottom: 20px; right: 20px; background: #0f172a; color: #38bdf8; padding: 16px; border-radius: 16px; font-family: monospace; font-size: 11px; max-width: 320px; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.3); z-index: 999999; border: 1px solid #1e293b;">
+        <div style="font-weight: bold; margin-bottom: 6px; display: flex; justify-content: space-between;"><span>🚀 SYSTEM MAIL GATEWAY</span><span style="color:#10b981;">ONLINE</span></div>
+        <div id="sandbox-log" style="color: #94a3b8; max-height: 80px; overflow-y: auto;">核心总线就绪。</div>
+    </div>
+
+    <script>
+        // 本地临时数据层
+        if (!localStorage.getItem("site_config")) {
+            localStorage.setItem("site_config", JSON.stringify({ name: "Han", avatar: "Han", footer: "© 2026 Han" }));
+        }
+        if (!localStorage.getItem("db_posts")) {
+            localStorage.setItem("db_posts", JSON.stringify([
+                { title: "免费制作个人域名邮箱", summary: "教你如何利用 Cloudflare 和 Lark 搭建免费的企业邮箱。", author: "admin", date: "2026-06-23" }
+            ]));
+        }
+        if (!localStorage.getItem("users_backend")) {
+            localStorage.setItem("users_backend", JSON.stringify([
+                { username: "admin", password: "123", email: "mobai@vobl.cn", role: "管理员" },
+                { username: "editor", password: "123", email: "editor@vobl.cn", role: "用户" }
+            ]));
+        }
+        if (!localStorage.getItem("users_frontend")) {
+            localStorage.setItem("users_frontend", JSON.stringify([
+                { username: "Guest_01", password: "123", email: "guest@qq.com", role: "前端读者" }
+            ]));
+        }
+
+        let system_current_otp = null;
+
+        // 极光跟着鼠标
+        const aurora = document.getElementById("glow-aurora");
+        if (window.innerWidth > 768) {
+            aurora.style.display = "block";
+            window.addEventListener("mousemove", (e) => {
+                aurora.style.left = e.clientX + "px";
+                aurora.style.top = e.clientY + "px";
+            });
+        }
+
+        // 前台切页控制
+        function switchFrontTab(tabName) {
+            const tabs = ['home', 'about', 'archive'];
+            tabs.forEach(t => {
+                document.getElementById(`f-tab-${t}`).classList.add("hidden");
+                document.getElementById(`f-nav-${t}`).className = "front-nav-btn hover:text-gray-900 hover:bg-gray-50 text-gray-500";
+            });
+            document.getElementById(`f-tab-${tabName}`).classList.remove("hidden");
+            document.getElementById(`f-nav-${tabName}`).className = "front-nav-btn text-cyan-600 bg-cyan-50";
+            
+            if (tabName === 'archive') { renderArchiveTimeline(); }
+        }
+
+        // 真实连接你的 Cloudflare 发信工人
+        function triggerLarkMailGateway(targetEmail, otpCode, typeText) {
+            const logBox = document.getElementById("sandbox-log");
+            logBox.innerHTML = `[${new Date().toLocaleTimeString()}] 正在发起网络投递至: ${targetEmail}...`;
+            
+            fetch("https://mail.vobl-guojyin.workers.dev", {  
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ email: targetEmail, code: otpCode, type: typeText })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if(data.success) {
+                    logBox.innerHTML = `[${new Date().toLocaleTimeString()}] <span style="color:#10b981;">[成功] 真实验证码已投递至 ${targetEmail}！</span>`;
+                } else {
+                    logBox.innerHTML = `[${new Date().toLocaleTimeString()}] <span style="color:#ef4444;">[失败] 发信接口跨域或拒绝: ${data.error || '未获授权'}</span>`;
+                }
+            })
+            .catch(err => {
+                logBox.innerHTML = `[${new Date().toLocaleTimeString()}] <span style="color:#ef4444;">[错误] 授信通道握手故障</span>`;
+            });
+        }
+
+        function generateOTP() {
+            system_current_otp = Math.floor(100000 + Math.random() * 900000).toString();
+            return system_current_otp;
+        }
+
+        function sendCodeForRegister() {
+            const email = document.getElementById("front-email").value.trim();
+            if (!email) return alert("请先填写有效的电子邮箱！");
+            const code = generateOTP();
+            triggerLarkMailGateway(email, code, "前端读者邮箱注册激活");
+            alert("验证码已交由云端边缘发送！");
+        }
+
+        // 修复后台登录发信机制
+        function sendCodeForLogin() {
+            const username = document.getElementById("adm-user").value.trim();
+            if (!username) return alert("请先填写需要验证的管理员账号！");
+            const bUsers = JSON.parse(localStorage.getItem("users_backend")) || [];
+            const found = bUsers.find(u => u.username === username);
+            if (!found) return alert("账号不存在！");
+            
+            const code = generateOTP();
+            triggerLarkMailGateway(found.email, code, "2FA 后台安全锁");
+            alert(`验证码已发往绑定的邮箱：${found.email}`);
+        }
+
+        function sendCodeForAction() {
+            const currentUser = JSON.parse(localStorage.getItem("session_user"));
+            if (!currentUser) return;
+            const code = generateOTP();
+            triggerLarkMailGateway(currentUser.email, code, "敏感高危授权");
+            alert(`验证码已派发至：${currentUser.email}`);
+        }
+
+        function applyGlobalStyles() {
+            const cfg = JSON.parse(localStorage.getItem("site_config"));
+            document.getElementById("meta-title").innerText = cfg.name + " - 主控中心";
+            document.getElementById("site-display-name").innerText = cfg.name;
+            document.getElementById("site-avatar").innerText = cfg.avatar;
+            document.getElementById("site-footer-text").innerText = cfg.footer;
+        }
+
+        function renderFrontSite() {
+            applyGlobalStyles();
+            const posts = JSON.parse(localStorage.getItem("db_posts")) || [];
+            const container = document.getElementById("front-posts-container");
+            container.innerHTML = posts.map(p => `
+                <div class="blog-card p-10">
+                    <h2 class="text-2xl font-extrabold text-gray-900 mb-4">${p.title}</h2>
+                    <p class="text-gray-600 text-sm leading-relaxed mb-8">${p.summary}</p>
+                    <div class="text-xs text-gray-400 flex items-center justify-between font-medium">
+                        <div class="flex items-center gap-1.5"><span>🕒</span> 阅读时间: 2分钟</div>
+                        <div class="flex items-center gap-1 bg-gray-100 text-gray-600 px-2.5 py-1 rounded-lg text-xs font-semibold">
+                            👤 发布者: <span class="text-cyan-600">${p.author}</span>
+                        </div>
+                    </div>
+                </div>
+            `).join("");
+        }
+
+        function renderArchiveTimeline() {
+            const posts = JSON.parse(localStorage.getItem("db_posts")) || [];
+            const archiveBox = document.getElementById("front-archive-container");
+            if (posts.length === 0) {
+                archiveBox.innerHTML = `<p class="text-gray-400 text-sm">暂无归档文章记录。</p>`;
+                return;
+            }
+            archiveBox.innerHTML = posts.map(p => `
+                <div class="relative py-2 group cursor-pointer">
+                    <div class="absolute -left-[31px] top-4 bg-white border-2 border-cyan-500 w-3 h-3 rounded-full group-hover:bg-cyan-500 transition"></div>
+                    <div class="text-xs font-mono text-gray-400">${p.date || '2026-06-23'}</div>
+                    <div class="text-base font-bold text-gray-800 group-hover:text-cyan-600 transition mt-0.5">${p.title}</div>
+                </div>
+            `).join("");
+        }
+
+        function renderAdminDashboard() {
+            const posts = JSON.parse(localStorage.getItem("db_posts")) || [];
+            const backendUsers = JSON.parse(localStorage.getItem("users_backend")) || [];
+            const frontendUsers = JSON.parse(localStorage.getItem("users_frontend")) || [];
+            const currentUser = JSON.parse(localStorage.getItem("session_user"));
+
+            if (!currentUser) return;
+
+            const cfg = JSON.parse(localStorage.getItem("site_config"));
+            document.getElementById("cfg-site-name").value = cfg.name;
+            document.getElementById("cfg-site-avatar").value = cfg.avatar;
+            document.getElementById("cfg-site-footer").value = cfg.footer;
+
+            if (currentUser.role !== "管理员") {
+                document.getElementById("btn-save-global").classList.add("opacity-40", "pointer-events-none");
+                document.getElementById("user-creation-box").classList.add("opacity-40", "pointer-events-none");
+            } else {
+                document.getElementById("btn-save-global").classList.remove("opacity-40", "pointer-events-none");
+                document.getElementById("user-creation-box").classList.remove("opacity-40", "pointer-events-none");
+            }
+
+            document.getElementById("admin-posts-list").innerHTML = posts.map((p, index) => {
+                if (currentUser.role !== "管理员" && p.author !== currentUser.username) return "";
+                return `
+                    <tr class="border-b border-gray-50 text-gray-700">
+                        <td class="py-3 font-semibold">${p.title}</td>
+                        <td class="py-3 text-xs text-gray-400 font-medium">@${p.author}</td>
+                        <td class="py-3 text-xs space-x-2">
+                            <button onclick="editPost(${index})" class="text-cyan-600 font-bold hover:underline">编辑</button>
+                            <button onclick="deletePost(${index})" class="text-red-500 font-bold hover:underline">删除</button>
+                        </td>
+                    </tr>
+                `;
+            }).join("");
+
+            document.getElementById("table-backend-users").innerHTML = backendUsers.map((u, index) => `
+                <tr class="border-b border-gray-50 text-gray-700">
+                    <td class="py-3 font-semibold">${u.username} <span class="text-xs text-gray-400">(${u.email})</span></td>
+                    <td class="py-3"><span class="px-2 py-0.5 rounded-md text-xs font-bold bg-gray-100 text-gray-600">${u.role}</span></td>
+                    <td class="py-3 text-xs space-x-3">
+                        <button onclick="resetUserPassword('backend', ${index})" ${currentUser.role !== '管理员' ? 'style="display:none;"' : ''} class="text-amber-600 font-bold hover:underline">重置密匙</button>
+                        <button onclick="deleteUser('backend', ${index})" ${currentUser.role !== '管理员' || u.username === 'admin' ? 'style="display:none;"' : ''} class="text-red-500 font-bold hover:underline">降维剔除</button>
+                    </td>
+                </tr>
+            `).join("");
+
+            document.getElementById("table-frontend-users").innerHTML = frontendUsers.map((u, index) => `
+                <tr class="border-b border-gray-50 text-gray-700">
+                    <td class="py-3 font-semibold">${u.username} <span class="text-xs text-gray-400">(${u.email})</span></td>
+                    <td class="py-3"><span class="px-2 py-0.5 bg-emerald-50 text-emerald-600 rounded-md text-xs font-bold">${u.role}</span></td>
+                    <td class="py-3 text-xs space-x-3">
+                        <button onclick="resetUserPassword('frontend', ${index})" ${currentUser.role !== '管理员' ? 'style="display:none;"' : ''} class="text-amber-600 font-bold hover:underline">重置密匙</button>
+                        <button onclick="deleteUser('frontend', ${index})" ${currentUser.role !== '管理员' ? 'style="display:none;"' : ''} class="text-red-500 font-bold hover:underline">注销清除</button>
+                    </td>
+                </tr>
+            `).join("");
+        }
+
+        function handleFrontRegister() {
+            const uInput = document.getElementById("front-user").value.trim();
+            const eInput = document.getElementById("front-email").value.trim();
+            const pInput = document.getElementById("front-pass").value;
+            const cInput = document.getElementById("front-code").value.trim();
+            let fUsers = JSON.parse(localStorage.getItem("users_frontend")) || [];
+
+            if (!uInput || !eInput || !pInput || !cInput) return alert("请完整填写！");
+            if (cInput !== system_current_otp) return alert("验证码错误！");
+
+            fUsers.push({ username: uInput, email: eInput, password: pInput, role: "前端读者" });
+            localStorage.setItem("users_frontend", JSON.stringify(fUsers));
+            alert("读者账号激活成功！");
+            system_current_otp = null;
+            closeAuthModal();
+        }
+
+        function handleAdminLogin() {
+            const uInput = document.getElementById("adm-user").value.trim();
+            const pInput = document.getElementById("adm-pass").value;
+            const cInput = document.getElementById("adm-code").value.trim();
+            const bUsers = JSON.parse(localStorage.getItem("users_backend")) || [];
+
+            if (!uInput || !pInput || !cInput) return alert("请填满数据！");
+            if (cInput !== system_current_otp) return alert("验证码不匹配！");
+
+            const found = bUsers.find(user => user.username === uInput && user.password === pInput);
+            if (found) {
+                localStorage.setItem("session_user", JSON.stringify(found));
+                system_current_otp = null; 
+                router();
+            } else { alert("管理凭证匹配失败！"); }
+        }
+
+        function changeMyPassword() {
+            const newPass = document.getElementById("prof-new-pass").value;
+            const code = document.getElementById("code-profile-action").value.trim();
+            let currentUser = JSON.parse(localStorage.getItem("session_user"));
+
+            if (!newPass || !code) return alert("参数不可缺失！");
+            if (code !== system_current_otp) return alert("安全核验码失败！");
+
+            let bUsers = JSON.parse(localStorage.getItem("users_backend"));
+            const targetIdx = bUsers.findIndex(u => u.username === currentUser.username);
+            bUsers[targetIdx].password = newPass;
+            localStorage.setItem("users_backend", JSON.stringify(bUsers));
+            alert("密码修改成功，正在安全注销...");
+            system_current_otp = null;
+            exitAdmin();
+        }
+
+        function resetUserPassword(type, index) {
+            const code = document.getElementById("code-user-action").value.trim();
+            if (!code) return alert("请输入授权重置验证码！");
+            if (code !== system_current_otp) return alert("授权核验失败！");
+
+            const newSecret = Math.floor(100000 + Math.random() * 900000).toString();
+
+            if (type === 'backend') {
+                let bUsers = JSON.parse(localStorage.getItem("users_backend"));
+                bUsers[index].password = newSecret;
+                localStorage.setItem("users_backend", JSON.stringify(bUsers));
+                alert(`内部账户 [${bUsers[index].username}] 密码已变更为：${newSecret}`);
+            } else {
+                let fUsers = JSON.parse(localStorage.getItem("users_frontend"));
+                fUsers[index].password = newSecret;
+                localStorage.setItem("users_frontend", JSON.stringify(fUsers));
+                alert(`前端读者 [${fUsers[index].username}] 密码已变更为：${newSecret}`);
+            }
+            system_current_otp = null;
+            document.getElementById("code-user-action").value = "";
+            renderAdminDashboard();
+        }
+
+        function saveGlobalConfig() {
+            const name = document.getElementById("cfg-site-name").value.trim();
+            const avatar = document.getElementById("cfg-site-avatar").value.trim();
+            const footer = document.getElementById("cfg-site-footer").value.trim();
+            const code = document.getElementById("code-global").value.trim();
+
+            if (!name || !avatar || !footer || !code) return alert("参数不可空！");
+            if (code !== system_current_otp) return alert("验证码校验故障！");
+
+            localStorage.setItem("site_config", JSON.stringify({ name, avatar, footer }));
+            alert("全局总线配置同步成功！");
+            system_current_otp = null;
+            window.location.hash = ""; 
+        }
+
+        function openFrontRegisterModal() {
+            document.getElementById("auth-modal").classList.remove("hidden");
+            document.getElementById("front-reg-box").classList.remove("hidden");
+            document.getElementById("admin-login-box").classList.add("hidden");
+        }
+
+        function closeAuthModal() { document.getElementById("auth-modal").classList.add("hidden"); }
+
+        function router() {
+            const isHashAdmin = window.location.hash === "#admin";
+            const currentUser = localStorage.getItem("session_user");
+
+            if (isHashAdmin) {
+                document.getElementById("main-site").classList.add("hidden");
+                if (currentUser) {
+                    document.getElementById("current-user-badge").innerText = JSON.parse(currentUser).username;
+                    document.getElementById("admin-panel").classList.remove("hidden");
+                    document.getElementById("auth-modal").classList.add("hidden");
+                    renderAdminDashboard();
+                } else {
+                    document.getElementById("auth-modal").classList.remove("hidden");
+                    document.getElementById("admin-login-box").classList.remove("hidden");
+                    document.getElementById("front-reg-box").classList.add("hidden");
+                    document.getElementById("admin-panel").classList.add("hidden");
+                }
+            } else {
+                document.getElementById("main-site").classList.remove("hidden");
+                document.getElementById("admin-panel").classList.add("hidden");
+                document.getElementById("auth-modal").classList.add("hidden");
+                switchFrontTab('home');
+            }
+        }
+
+        function exitAdmin() { localStorage.removeItem("session_user"); window.location.hash = ""; }
+
+        function switchTab(tab) {
+            const tabs = ['global', 'posts', 'users', 'profile'];
+            tabs.forEach(t => {
+                document.getElementById(`tab-${t}`).classList.add("hidden");
+                document.getElementById(`tab-btn-${t}`).className = "admin-nav-item text-gray-600 hover:bg-gray-100";
+            });
+            document.getElementById(`tab-${tab}`).classList.remove("hidden");
+            document.getElementById(`tab-btn-${tab}`).className = "admin-nav-item bg-cyan-600 text-white";
+        }
+
+        function addBackendUser() {
+            const username = document.getElementById("add-adm-username").value.trim();
+            const email = document.getElementById("add-adm-email").value.trim();
+            const password = document.getElementById("add-adm-password").value;
+
+            if (!username || !email || !password) return alert("必填！");
+            let bUsers = JSON.parse(localStorage.getItem("users_backend")) || [];
+            bUsers.push({ username, email, password, role: "用户" });
+            localStorage.setItem("users_backend", JSON.stringify(bUsers));
+            
+            document.getElementById("add-adm-username").value = "";
+            document.getElementById("add-adm-email").value = "";
+            document.getElementById("add-adm-password").value = "";
+            renderAdminDashboard();
+        }
+
+        function deleteUser(type, index) {
+            if (!confirm("确定下线？")) return;
+            if (type === 'backend') {
+                let bUsers = JSON.parse(localStorage.getItem("users_backend"));
+                bUsers.splice(index, 1);
+                localStorage.setItem("users_backend", JSON.stringify(bUsers));
+            } else {
+                let fUsers = JSON.parse(localStorage.getItem("users_frontend"));
+                fUsers.splice(index, 1);
+                localStorage.setItem("users_frontend", JSON.stringify(fUsers));
+            }
+            renderAdminDashboard();
+        }
+
+        function savePost() {
+            const title = document.getElementById("input-post-title").value;
+            const summary = document.getElementById("input-post-summary").value;
+            const editIndex = document.getElementById("edit-post-index").value;
+            const currentUser = JSON.parse(localStorage.getItem("session_user"));
+            const todayStr = new Date().toISOString().split('T')[0];
+
+            if (!title || !summary) return alert("必填！");
+            let posts = JSON.parse(localStorage.getItem("db_posts")) || [];
+
+            if (editIndex !== "") {
+                posts[parseInt(editIndex)].title = title;
+                posts[parseInt(editIndex)].summary = summary;
+                document.getElementById("edit-post-index").value = "";
+            } else {
+                posts.unshift({ title, summary, author: currentUser.username, date: todayStr });
+            }
+            localStorage.setItem("db_posts", JSON.stringify(posts));
+            clearPostForm();
+            renderAdminDashboard();
+        }
+
+        function editPost(index) {
+            const posts = JSON.parse(localStorage.getItem("db_posts")) || [];
+            document.getElementById("input-post-title").value = posts[index].title;
+            document.getElementById("input-post-summary").value = posts[index].summary;
+            document.getElementById("edit-post-index").value = index;
+        }
+
+        function deletePost(index) {
+            if (confirm("确定删除？")) {
+                let posts = JSON.parse(localStorage.getItem("db_posts")) || [];
+                posts.splice(index, 1);
+                localStorage.setItem("db_posts", JSON.stringify(posts));
+                renderAdminDashboard();
+            }
+        }
+
+        function clearPostForm() {
+            document.getElementById("input-post-title").value = "";
+            document.getElementById("input-post-summary").value = "";
+            document.getElementById("edit-post-index").value = "";
+        }
+
+        window.addEventListener("hashchange", router);
+        window.addEventListener("DOMContentLoaded", router);
+    </script>
+</body>
+</html>
