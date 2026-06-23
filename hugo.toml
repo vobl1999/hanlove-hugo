@@ -1,3 +1,1 @@
-baseURL = 'https://example.org/'
-languageCode = 'en-us'
-title = 'My New Hugo Project'
+﻿title = "Han - 2FA 安全主控中心"`nlanguageCode = "zh-cn"`nbaseURL = "https://your-domain.pages.dev/"
