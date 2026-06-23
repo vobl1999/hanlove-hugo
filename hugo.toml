@@ -1,1 +1,9 @@
-﻿title = "Han - 2FA 安全主控中心"`nlanguageCode = "zh-cn"`nbaseURL = "https://your-domain.pages.dev/"
+﻿title = "Han - 2FA 安全主控中心"
+languageCode = "zh-cn"
+baseURL = "https://your-domain.pages.dev/"
+
+[build]
+  writeStats = true
+
+[params]
+  hugoVersion = "0.120.0"
