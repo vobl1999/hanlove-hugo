@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+<head>
+    <meta charset="UTF-8">
+    <title>Han - 2FA 安全主控中心</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css">
+    <style>
+        body { background-color: #0f172a; color: #f8fafc; font-family: -apple-system, sans-serif; overflow: hidden; }
+        .glass-panel { background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(16px); border: 1px solid rgba(255,255,255,0.05); border-radius: 24px; }
+        .interactive-btn { background: #0284c7; transition: all 0.2s; }
+        .interactive-btn:hover { background: #0369a1; transform: translateY(-1px); }
+        #glow-aurora {
+            position: fixed; top: 0; left: 0; width: 300px; height: 300px;
+            background: radial-gradient(circle, rgba(56, 189, 248, 0.15) 0%, rgba(0, 0, 0, 0) 70%);
+            border-radius: 50%; pointer-events: none; z-index: 9999; transform: translate(-50%, -50%); filter: blur(20px);
+        }
+    </style>
+</head>
+<body class="antialiased flex items-center justify-center min-height: 100vh" style="height: 100vh;">
+
+    <div id="glow-aurora"></div>
+
+    <div id="login-box" class="glass-panel p-8 w-96 shadow-2xl z-10 text-center">
+        <h3 class="text-white font-extrabold text-xl tracking-wider mb-2">GATEWAY SECURITY LOCK</h3>
+        <p class="text-xs text-sky-400 font-mono mb-6">敏感权限：需要双因子边界认证</p>
+        
+        <div class="space-y-4">
+            <input type="text" id="adm-user" placeholder="SECURITY ACCOUNT" class="w-full py-3 px-4 bg-slate-900 border border-slate-700 rounded-xl text-center outline-none text-sm text-white focus:border-sky-500">
+            <input type="password" id="adm-pass" placeholder="ACCESS PASSWORD" class="w-full py-3 px-4 bg-slate-900 border border-slate-700 rounded-xl text-center outline-none text-sm text-white focus:border-sky-500">
+            
+            <div class="flex gap-2">
+                <input type="text" id="adm-code" placeholder="6位邮件核验码" class="w-3/5 py-3 px-4 bg-slate-900 border border-slate-700 rounded-xl text-center outline-none text-sm text-white focus:border-sky-500">
+                <button onclick="requestSecureOTP()" class="w-2/5 text-xs bg-sky-600 hover:bg-sky-700 text-white font-bold rounded-xl transition">获取验证码</button>
+            </div>
+            
+            <button onclick="verifyAndAccess()" class="w-full py-3 bg-emerald-600 text-white font-bold rounded-xl text-sm hover:bg-emerald-500 transition">安全解锁总线</button>
+        </div>
+    </div>
+
+    <div id="control-panel" class="glass-panel p-10 max-w-4xl w-full mx-4 shadow-2xl z-10 hidden">
+        <div class="flex items-center justify-between border-b border-slate-700 pb-4 mb-6">
+            <div>
+                <h1 class="text-2xl font-extrabold text-white flex items-center gap-2">哈尔滨美佳外国语学校数字化主控系统</h1>
+                <p class="text-xs text-slate-400 mt-1">边缘网关状态：<span class="text-emerald-400 font-bold">已连接</span></p>
+            </div>
+            <button onclick="lockSystem()" class="text-xs font-bold text-slate-400 hover:text-rose-400 transition">断开连接</button>
+        </div>
+        
+        <div class="grid grid-cols-3 gap-6">
+            <div class="bg-slate-900 p-5 rounded-xl border border-slate-800">
+                <h4 class="text-sm font-bold text-sky-400 mb-2">⚙️ 全局站点设置</h4>
+                <p class="text-xs text-slate-400">控制 Hugo 构建树顶层变量，实现一键下发。</p>
+            </div>
+            <div class="bg-slate-900 p-5 rounded-xl border border-slate-800">
+                <h4 class="text-sm font-bold text-emerald-400 mb-2">🔊 点名语音系统状态</h4>
+                <p class="text-xs text-slate-400">TTS 语音合成总线就绪，7-6 班级数据同步成功。</p>
+            </div>
+            <div class="bg-slate-900 p-5 rounded-xl border border-slate-800">
+                <h4 class="text-sm font-bold text-amber-400 mb-2">🔐 密码资产及重置中心</h4>
+                <p class="text-xs text-slate-400">可在此内定管理员凭证，或强制清洗前端读者矩阵。</p>
+            </div>
+        </div>
+    </div>
+
+    <div style="position: fixed; bottom: 20px; right: 20px; background: #020617; border: 1px solid #1e293b; padding: 15px; border-radius: 16px; font-family: monospace; font-size: 11px; width: 280px; z-index: 10000;">
+        <div class="flex justify-between font-bold mb-2 text-sky-400"><span>📡 NET ACCELERATOR</span><span class="text-emerald-400">ONLINE</span></div>
+        <div id="sandbox-log" class="text-slate-400">安全防护中。</div>
+    </div>
+
+    <script>
+        let cached_otp = null;
+        const aurora = document.getElementById("glow-aurora");
+        window.addEventListener("mousemove", (e) => {
+            aurora.style.left = e.clientX + "px"; aurora.style.top = e.clientY + "px";
+        });
+
+        function requestSecureOTP() {
+            const user = document.getElementById("adm-user").value.trim();
+            if(!user) return alert("请输入管理员/员工用户名！");
+            
+            cached_otp = Math.floor(100000 + Math.random() * 900000).toString();
+            document.getElementById("sandbox-log").innerText = "正在发起云端边缘投递...";
+            
+            fetch("https://mail.vobl-guojyin.workers.dev", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ email: "mobai@vobl.cn", code: cached_otp, type: "2FA 后台主控舱解锁" })
+            })
+            .then(() => { document.getElementById("sandbox-log").innerHTML = "<span style='color:#10b981;'>[成功] 验证码已送达安全邮箱！</span>"; })
+            .catch(() => { document.getElementById("sandbox-log").innerHTML = "<span style='color:#ef4444;'>[警告] 边缘调用失败</span>"; });
+        }
+
+        function verifyAndAccess() {
+            const code = document.getElementById("adm-code").value.trim();
+            const user = document.getElementById("adm-user").value;
+            const pass = document.getElementById("adm-pass").value;
+
+            if (user === "admin" && pass === "123" && code === cached_otp) {
+                document.getElementById("login-box").classList.add("hidden");
+                document.getElementById("control-panel").classList.remove("hidden");
+                document.getElementById("sandbox-log").innerText = "总线解锁，最高权限接入。";
+            } else { alert("二次安全校验不匹配！"); }
+        }
+
+        function lockSystem() {
+            document.getElementById("login-box").classList.remove("hidden");
+            document.getElementById("control-panel").classList.add("hidden");
+            document.getElementById("adm-code").value = ""; cached_otp = null;
+            document.getElementById("sandbox-log").innerText = "权限销毁，重回加密状态。";
+        }
+    </script>
+</body>
+</html>

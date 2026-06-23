@@ -1,0 +1,104 @@
+// --------------- 页面基本配置与磨砂玻璃底色 ---------------
+:root {
+  --main-top-padding: 30px;
+  --card-border-radius: 24px;
+  --tag-border-radius: 11px;
+  --section-separation: 40px;
+  --article-font-size: 1.6rem;
+  --code-background-color: #f8f8f8;
+  --code-text-color: #e96900;
+
+  &[data-scheme="dark"] {
+    --code-background-color: #ff6d1b17;
+    --code-text-color: #e96900;
+  }
+}
+
+// 隐藏隐藏后台的入口锚点样式
+#admin-anchor { display: none; }
+
+// --------------- 全局页面布局间距调整 ---------------
+.main-container {
+  min-height: 100vh;
+  align-items: flex-start;
+  padding: 0 15px;
+  gap: var(--section-separation);
+  padding-top: var(--main-top-padding);
+  @include respond(md) { padding: 0 37px; }
+}
+
+.container {
+  margin-left: auto; margin-right: auto;
+  .left-sidebar { order: -3; max-width: 15%; }
+  .right-sidebar { order: -1; max-width: 25%; @include respond(lg) { display: flex; } }
+}
+
+// --------------- 文章内容引用块与图片圆角 ---------------
+.article-content {
+  blockquote {
+    border-left: 6px solid #004b28 !important;
+    background: rgba(54, 110, 51, 0.15) !important;
+    border-radius: 12px;
+    padding: 15px;
+  }
+  a { word-break: break-all; }
+  code { word-break: break-all; }
+}
+
+.article-page .main-article .article-content img {
+  max-width: 96% !important; height: auto !important; border-radius: 12px;
+}
+
+// --------------- MacOS 风格代码块与语法高亮修正 ---------------
+.article-content {
+  .highlight {
+    margin-left: 0 !important; margin-right: 0 !important;
+    width: 100% !important; max-width: 100% !important;
+    border-radius: var(--card-border-radius) !important;
+    box-shadow: var(--shadow-l2) !important;
+    padding: 25px 20px 20px 20px !important;
+    position: relative;
+    
+    &:before {
+      content: ''; display: block;
+      background: url('/code-header.svg') no-repeat -1px 2px;
+      height: 32px; width: 100%; background-size: 57px;
+      margin-bottom: 5px;
+    }
+  }
+}
+
+[data-scheme="light"] .article-content .highlight { background-color: #fdf4eb !important; }
+[data-scheme="light"] .chroma { color: #ff6f00 !important; background-color: #fcf0e4cc !important; }
+
+// --------------- 动画：头像旋转、社交与选项卡缩放 ---------------
+.sidebar header .site-avatar .site-logo {
+  transition: transform 1.65s ease-in-out;
+  &:hover { transform: rotate(360deg); }
+}
+
+.menu-social li, .social-menu svg {
+  transition: transform 0.8s ease-in-out;
+  &:hover { transform: scale(1.3) rotate(360deg); }
+}
+
+#main-menu .current, #main-menu>li:not(.current) a:hover, #dark-mode-toggle:hover {
+  transform: scale(1.1); transition: transform .2s ease-in-out;
+}
+
+// --------------- 友情链接/归档三栏显示网格 ---------------
+@media (min-width: 1024px) {
+  .article-list--compact {
+    display: grid; grid-template-columns: 1fr 1fr 1fr;
+    background: none; box-shadow: none; gap: 1.2rem;
+    article {
+      background: var(--card-background); border: none;
+      box-shadow: var(--shadow-l2); border-radius: 16px; margin: 0 !important;
+    }
+  }
+}
+
+// --------------- 粒子背景层固定渲染 ---------------
+#particles-js {
+  position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1; pointer-events: none;
+}

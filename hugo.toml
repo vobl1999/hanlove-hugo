@@ -1,0 +1,24 @@
+title = "Han - 数字化安全空间"
+languageCode = "zh-cn"
+baseURL = "https://hanlove-hugo.pages.dev/"
+theme = "stack"
+
+[markup]
+  [markup.highlight]
+    noClasses = false
+    codeFences = true
+    guessSyntax = true
+    lineNoStart = 1
+    lineNos = true
+    lineNumbersInTable = true
+    tabWidth = 4
+    style = "github-dark"
+
+[params]
+  fancybox = true
+  enablePreloadingAnim = true
+  hugoVersion = "0.120.0"
+  
+  [params.footer]
+    since = 2025
+    customText = "安全总控总线正常连接"
