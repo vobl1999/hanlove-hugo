@@ -1,7 +1,7 @@
-title = "Han - 数字化安全空间"
+title = "Han - 数字化安全空�?
 languageCode = "zh-cn"
 baseURL = "https://hanlove-hugo.pages.dev/"
-theme = "stack"
+theme = "blowfish"
 
 [markup]
   [markup.highlight]
