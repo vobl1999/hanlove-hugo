@@ -1,21 +1,33 @@
-title = "Han - 鏁板瓧鍖栧畨鍏ㄧ┖闂?languageCode = "zh-cn"
-baseURL = "https://hanlove-hugo.pages.dev/"
-theme = "blowfish"
-[markup]
-  [markup.highlight]
-    noClasses = false
-    codeFences = true
-    guessSyntax = true
-    lineNoStart = 1
-    lineNos = true
-    lineNumbersInTable = true
-    tabWidth = 4
-    style = "github-dark"
+baseURL = "https://hanlove-cc.cd/"
+languageCode = "zh-cn"
+title = "Han's Blog"
+theme = "stack"
+
+[author]
+    name = "Han"
+    intro = "欢迎来到我的网站，此博客由【Hugo + Stack】来进行搭建，主要分享个人生活和学习笔记"
+    avatar = "https://ui-avatars.com/api/?name=Han&background=random&size=256"
+
 [params]
-  fancybox = true
-  enablePreloadingAnim = true
-  hugoVersion = "0.120.0"
-  
-  [params.footer]
-    since = 2025
-    customText = "瀹夊叏鎬绘帶鎬荤嚎姝ｅ父杩炴帴"
+    colorScheme = "auto"
+
+[params.sidebar]
+    emoji = "🤔"
+    subtitle = "欢迎来到我的网站，此博客由【Hugo + Stack】来进行搭建，主要分享个人生活和学习笔记"
+
+[params.sidebar.avatar]
+    enabled = true
+    local = false
+    src = "https://ui-avatars.com/api/?name=Han&background=random&size=256"
+
+[[menu.social]]
+    name = "GitHub"
+    weight = 1
+    identifier = "github"
+    url = "https://github.com/"
+
+[[menu.social]]
+    name = "Bilibili"
+    weight = 2
+    identifier = "bilibili"
+    url = "https://bilibili.com/"
