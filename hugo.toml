@@ -8,8 +8,11 @@ theme = "stack"
     intro = "欢迎来到我的网站，此博客由【Hugo + Stack】来进行搭建，主要分享个人生活和学习笔记"
     avatar = "https://ui-avatars.com/api/?name=Han&background=random&size=256"
 
-[params]
-    colorScheme = "auto"
+# ================= 就是这里修正了格式 =================
+[params.colorScheme]
+    toggle = true
+    default = "auto"
+# ====================================================
 
 [params.sidebar]
     emoji = "🤔"
