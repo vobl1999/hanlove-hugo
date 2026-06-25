@@ -2,10 +2,10 @@
 <html lang="zh-cn">
 <head>
     <meta charset="UTF-8">
-    <title>Han - 全局管控中心</title>
+    <title>Han OS - 全栈管理中心</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css">
     <style>
-        body { background-color: #0b0f19; color: #f1f5f9; }
+        body { background-color: #0b0f19; color: #f1f5f9; font-family: system-ui, -apple-system, sans-serif; }
         .glass { background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(16px); border: 1px solid rgba(255, 255, 255, 0.1); }
         .nav-btn.active { background: #38bdf8; color: #0b0f19; font-weight: bold; }
     </style>
@@ -14,22 +14,21 @@
 
     <div id="auth-view" class="glass p-8 rounded-2xl w-full max-w-md shadow-2xl text-center">
         <div class="text-3xl mb-4">🔐</div>
-        <h2 class="text-2xl font-black mb-6 tracking-widest text-white">ADMIN PORTAL</h2>
+        <h2 class="text-2xl font-black mb-6 tracking-widest text-white">HAN OS PORTAL</h2>
         <div class="space-y-4">
-            <input type="text" id="username" placeholder="ROOT ACCOUNT" class="w-full p-3 rounded-xl bg-slate-900 border border-slate-700 text-center text-white focus:border-sky-500 outline-none">
-            <input type="password" id="password" placeholder="PASSWORD" class="w-full p-3 rounded-xl bg-slate-900 border border-slate-700 text-center text-white focus:border-sky-500 outline-none">
-            <button onclick="login()" class="w-full py-3 bg-sky-600 hover:bg-sky-500 rounded-xl font-bold transition">核心验证</button>
+            <input type="text" id="username" placeholder="ADMIN USERNAME" class="w-full p-3 rounded-xl bg-slate-900 border border-slate-700 text-center text-white focus:border-sky-500 outline-none">
+            <input type="password" id="password" placeholder="ACCESS PASSWORD" class="w-full p-3 rounded-xl bg-slate-900 border border-slate-700 text-center text-white focus:border-sky-500 outline-none">
+            <button onclick="login()" class="w-full py-3 bg-sky-600 hover:bg-sky-500 rounded-xl font-bold transition">核心验证登入</button>
         </div>
     </div>
 
-    <div id="dashboard-view" class="hidden w-full max-w-6xl h-[90vh] glass rounded-2xl shadow-2xl flex flex-col overflow-hidden">
-        
+    <div id="dashboard-view" class="hidden w-full max-w-6xl h-[85vh] glass rounded-2xl shadow-2xl flex flex-col overflow-hidden">
         <header class="p-4 border-b border-slate-700 flex justify-between items-center bg-slate-900/50">
             <div class="flex items-center gap-3">
-                <span class="text-sky-400 text-xl font-black tracking-widest">HAN OS</span>
+                <span class="text-sky-400 text-xl font-black tracking-widest">HAN OS SYSTEM</span>
                 <span class="px-2 py-1 bg-emerald-500/20 text-emerald-400 text-xs rounded font-mono">D1 CONNECTED</span>
             </div>
-            <button onclick="logout()" class="text-xs text-slate-400 hover:text-white transition">登出断开</button>
+            <button onclick="logout()" class="text-xs text-slate-400 hover:text-white transition">切断安全断路器</button>
         </header>
 
         <div class="flex flex-1 overflow-hidden">
@@ -40,68 +39,56 @@
             </nav>
 
             <main class="flex-1 p-6 overflow-y-auto bg-slate-900/10">
-                
                 <div id="panel-logs" class="panel">
-                    <h3 class="text-lg font-bold mb-4 text-white">最高权限操作日志</h3>
-                    <div class="space-y-2 font-mono text-xs">
-                        <div class="p-3 bg-slate-800/50 rounded-lg border border-slate-700"><span class="text-sky-400">[2026-06-24 18:00]</span> SYSTEM: 博客主站回滚成功，配置重置。</div>
-                        <div class="p-3 bg-slate-800/50 rounded-lg border border-slate-700"><span class="text-emerald-400">[2026-06-24 17:45]</span> AUTH: Admin 账户 2FA 验证通过。</div>
-                        <div class="p-3 bg-slate-800/50 rounded-lg border border-slate-700"><span class="text-amber-400">[2026-06-24 17:30]</span> WARN: 拦截到 3 次非法哈希碰撞尝试。</div>
-                    </div>
+                    <h3 class="text-lg font-bold mb-4 text-white">最高权限操作日志审计</h3>
+                    <div id="log-container" class="space-y-2 font-mono text-xs">
+                        </div>
                 </div>
 
                 <div id="panel-settings" class="panel hidden">
-                    <h3 class="text-lg font-bold mb-4 text-white">动态网站配置修改</h3>
+                    <h3 class="text-lg font-bold mb-4 text-white">动态网站设置修改</h3>
                     <div class="grid grid-cols-2 gap-4">
                         <div class="p-4 bg-slate-800/50 rounded-xl border border-slate-700">
-                            <label class="block text-xs text-slate-400 mb-2">站点全局公告</label>
-                            <input type="text" value="系统底层维护已完成。" class="w-full p-2 bg-slate-900 rounded text-sm text-white border border-slate-600">
+                            <label class="block text-xs text-slate-400 mb-2">站点全局通知公告</label>
+                            <input type="text" id="setting-notice" class="w-full p-2 bg-slate-900 rounded text-sm text-white border border-slate-600">
                         </div>
                         <div class="p-4 bg-slate-800/50 rounded-xl border border-slate-700">
                             <label class="block text-xs text-slate-400 mb-2">开放注册状态</label>
-                            <select class="w-full p-2 bg-slate-900 rounded text-sm text-white border border-slate-600">
-                                <option>开启</option><option selected>关闭 (仅邀请)</option>
+                            <select id="setting-reg" class="w-full p-2 bg-slate-900 rounded text-sm text-white border border-slate-600">
+                                <option value="1">开启注册</option>
+                                <option value="0">关闭注册</option>
                             </select>
                         </div>
                     </div>
-                    <button class="mt-4 px-6 py-2 bg-sky-600 hover:bg-sky-500 rounded text-sm font-bold">更新至 D1 数据库</button>
+                    <button onclick="saveSettings()" class="mt-4 px-6 py-2 bg-sky-600 hover:bg-sky-500 rounded text-sm font-bold">同步更新至 D1 数据库</button>
                 </div>
 
                 <div id="panel-audit" class="panel hidden">
                     <h3 class="text-lg font-bold mb-4 text-white">用户发帖待审核队列</h3>
-                    <div class="bg-slate-800/50 rounded-xl border border-slate-700 p-4 mb-4">
-                        <div class="flex justify-between mb-2">
-                            <span class="text-sm font-bold text-sky-300">User: guest_992</span>
-                            <span class="text-xs text-slate-500">2 mins ago</span>
+                    <div id="audit-container" class="space-y-4">
                         </div>
-                        <p class="text-sm text-slate-300 mb-4">测试一下评论系统和发帖功能是否连通了 D1...</p>
-                        <div class="flex gap-2">
-                            <button class="px-4 py-1.5 bg-emerald-600/80 hover:bg-emerald-500 rounded text-xs font-bold">✅ 通过并发布</button>
-                            <button class="px-4 py-1.5 bg-red-600/80 hover:bg-red-500 rounded text-xs font-bold">❌ 拒绝并删除</button>
-                        </div>
-                    </div>
                 </div>
-
             </main>
         </div>
     </div>
 
     <script>
-        // 模拟登录与界面切换逻辑
+        const API_BASE = "https://han-auth-api.vobl-guojyin.workers.dev";
         function login() {
             document.getElementById('auth-view').classList.add('hidden');
             document.getElementById('dashboard-view').classList.remove('hidden');
             document.body.classList.remove('items-center');
             document.body.classList.add('p-8');
+            fetchLogs();
+            fetchSettings();
+            fetchAudit();
         }
-
         function logout() {
             document.getElementById('dashboard-view').classList.add('hidden');
             document.getElementById('auth-view').classList.remove('hidden');
             document.body.classList.add('items-center');
             document.body.classList.remove('p-8');
         }
-
         function switchTab(tabId) {
             document.querySelectorAll('.nav-btn').forEach(btn => {
                 btn.classList.remove('active', 'bg-sky-400', 'text-slate-900', 'font-bold');
@@ -109,9 +96,50 @@
             });
             document.getElementById('tab-' + tabId).classList.add('active');
             document.getElementById('tab-' + tabId).classList.remove('text-slate-400');
-            
-            document.querySelectorAll('.panel').forEach(panel => panel.classList.add('hidden'));
+            document.querySelectorAll('.panel').forEach(p => p.classList.add('hidden'));
             document.getElementById('panel-' + tabId).classList.remove('hidden');
+        }
+        function fetchLogs() {
+            fetch(`${API_BASE}/api/logs`).then(r => r.json()).then(res => {
+                if(res.success) {
+                    const container = document.getElementById('log-container');
+                    container.innerHTML = res.data.map(l => `<div class="p-3 bg-slate-800/50 rounded-lg border border-slate-700"><span class="text-sky-400">[${new Date(l.created_at).toLocaleString()}]</span> <b>${l.action}</b>: ${l.details}</div>`).join('');
+                }
+            });
+        }
+        function fetchSettings() {
+            fetch(`${API_BASE}/api/settings`).then(r => r.json()).then(res => {
+                if(res.success && res.data) {
+                    document.getElementById('setting-notice').value = res.data.notice;
+                    document.getElementById('setting-reg').value = res.data.registration_open;
+                }
+            });
+        }
+        function saveSettings() {
+            const notice = document.getElementById('setting-notice').value;
+            const reg = document.getElementById('setting-reg').value === "1";
+            fetch(`${API_BASE}/api/settings`, { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({notice, registration_open: reg}) }).then(r=>r.json()).then(d => alert(d.msg));
+        }
+        function fetchAudit() {
+            fetch(`${API_BASE}/api/audit`).then(r => r.json()).then(res => {
+                if(res.success) {
+                    const container = document.getElementById('audit-container');
+                    if(res.data.length === 0) { container.innerHTML = '<p class="text-xs text-slate-500">当前没有积压的待审核帖子。</p>'; return; }
+                    container.innerHTML = res.data.map(p => `
+                        <div class="bg-slate-800/50 rounded-xl border border-slate-700 p-4">
+                            <div class="flex justify-between mb-2"><span class="text-sm font-bold text-sky-300">作者: ${p.author}</span></div>
+                            <p class="text-sm text-slate-300 mb-4">${p.content}</p>
+                            <div class="flex gap-2">
+                                <button onclick="auditPost(${p.id}, 'approve')" class="px-4 py-1.5 bg-emerald-600/80 hover:bg-emerald-500 rounded text-xs font-bold">✅ 通过</button>
+                                <button onclick="auditPost(${p.id}, 'reject')" class="px-4 py-1.5 bg-red-600/80 hover:bg-red-500 rounded text-xs font-bold">❌ 拒绝</button>
+                            </div>
+                        </div>
+                    `).join('');
+                }
+            });
+        }
+        function auditPost(postId, action) {
+            fetch(`${API_BASE}/api/audit`, { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({postId, action}) }).then(r=>r.json()).then(d => { alert(d.msg); fetchAudit(); });
         }
     </script>
 </body>
