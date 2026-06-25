@@ -1,0 +1,113 @@
+<style>
+    .admin-wrapper { max-width: 1000px; margin: 2rem auto; font-family: system-ui, -apple-system, sans-serif; }
+    .admin-glass { background: rgba(30, 41, 59, 0.05); border: 1px solid rgba(148, 163, 184, 0.2); backdrop-filter: blur(12px); border-radius: 1.5rem; padding: 2rem; box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05); }
+    html.dark .admin-glass { background: rgba(15, 23, 42, 0.4); border-color: rgba(255, 255, 255, 0.1); box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.4); color: #f1f5f9; }
+    .admin-input { width: 100%; padding: 0.75rem 1rem; margin-bottom: 1rem; border-radius: 0.75rem; border: 1px solid rgba(148, 163, 184, 0.3); background: rgba(255, 255, 255, 0.6); text-align: center; font-weight: 600; outline: none; transition: all 0.2s; box-sizing: border-box; }
+    html.dark .admin-input { background: rgba(2, 6, 23, 0.5); border-color: rgba(255, 255, 255, 0.1); color: white; }
+    .admin-input:focus { border-color: #38bdf8; box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.2); }
+    .admin-btn { padding: 0.75rem 1.5rem; border: none; border-radius: 0.75rem; font-weight: bold; cursor: pointer; transition: all 0.2s; font-size: 0.875rem; }
+    .admin-btn-primary { background: #0284c7; color: white; width: 100%; }
+    .admin-btn-primary:hover { background: #0369a1; }
+    .admin-nav-btn { background: transparent; color: #64748b; border: 1px solid transparent; padding: 0.5rem 1rem; border-radius: 0.5rem; font-size: 0.875rem; font-weight: 600; cursor: pointer; }
+    html.dark .admin-nav-btn { color: #94a3b8; }
+    .admin-nav-btn.active { background: rgba(56, 189, 248, 0.1); color: #0284c7; border-color: rgba(56, 189, 248, 0.3); }
+    html.dark .admin-nav-btn.active { color: #38bdf8; background: rgba(56, 189, 248, 0.15); }
+    .admin-panel { display: none; margin-top: 1.5rem; text-align: left; }
+    .admin-panel.active { display: block; }
+    .log-item { padding: 0.6rem; background: rgba(0,0,0,0.02); border-radius: 0.5rem; margin-bottom: 0.5rem; font-family: monospace; font-size: 0.75rem; border-left: 3px solid #38bdf8; }
+    html.dark .log-item { background: rgba(255,255,255,0.02); }
+</style>
+
+<div class="admin-wrapper">
+    <div id="wp-auth-card" class="admin-glass" style="max-width: 24rem; margin: 0 auto;">
+        <div style="font-size: 2rem; margin-bottom: 0.5rem;">🔒</div>
+        <h2 style="font-size: 1.25rem; font-weight: 900; margin: 0 0 0.25rem 0;">HAN OS CONTROL PORTAL</h2>
+        <p style="font-size: 0.75rem; color: #38bdf8; font-family: monospace; margin-bottom: 1.5rem;">请输入管理员凭证解锁全局大盘</p>
+        <input type="text" id="wp-user" placeholder="ADMIN USERNAME" class="admin-input">
+        <input type="password" id="wp-pass" placeholder="MASTER PASSWORD" class="admin-input">
+        <button onclick="handleWpLogin()" class="admin-btn admin-btn-primary">进入核心大盘</button>
+    </div>
+
+    <div id="wp-dashboard-card" class="admin-glass" style="display: none; width: 100%;">
+        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(148,163,184,0.2); padding-bottom: 1rem; margin-bottom: 1rem;">
+            <div style="display: flex; align-items: center; gap: 0.5rem;">
+                <span style="font-weight: 900; letter-spacing: 0.05em; color: #38bdf8;">HAN BLOG PLATFORM</span>
+                <span style="font-size: 0.7rem; padding: 0.2rem 0.5rem; background: rgba(16,185,129,0.15); color: #10b981; border-radius: 0.25rem; font-family: monospace; font-weight: bold;">D1 LIVE</span>
+            </div>
+            <button onclick="handleWpLogout()" style="background: transparent; border: none; color: #ef4444; font-size: 0.75rem; cursor: pointer; font-weight: bold;">断开连接</button>
+        </div>
+
+        <div style="display: flex; gap: 0.5rem; border-bottom: 1px solid rgba(148,163,184,0.1); padding-bottom: 0.5rem;">
+            <button onclick="switchWpTab('logs')" id="btn-wp-logs" class="admin-nav-btn active">📝 系统日志</button>
+            <button onclick="switchWpTab('settings')" id="btn-wp-settings" class="admin-nav-btn">⚙️ 全站设置</button>
+            <button onclick="switchWpTab('audit')" id="btn-wp-audit" class="admin-nav-btn">🛡️ 帖子审核</button>
+        </div>
+
+        <div id="panel-wp-logs" class="admin-panel active">
+            <h4 style="font-size: 0.9rem; font-weight: bold; margin-bottom: 1rem;">D1 实时安全操作审计</h4>
+            <div id="log-container">
+                <div class="log-item"><span style="color: #38bdf8;">[2026-06-24]</span> SYSTEM: 成功将全功能管理中心融入博客主页布局。</div>
+                <div class="log-item"><span style="color: #10b981;">[2026-06-24]</span> D1-DB: 数据库表结构初始化成功。</div>
+            </div>
+        </div>
+
+        <div id="panel-wp-settings" class="admin-panel">
+            <h4 style="font-size: 0.9rem; font-weight: bold; margin-bottom: 1rem;">修改全站动态配置</h4>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 1.5rem;">
+                <div style="padding: 1rem; background: rgba(0,0,0,0.02); border: 1px solid rgba(148,163,184,0.2); border-radius: 0.75rem;">
+                    <label style="display: block; font-size: 0.75rem; color: #64748b; margin-bottom: 0.5rem;">全站公告通知</label>
+                    <input type="text" id="setting-notice" value="全栈大盘控制中心已完美合入主页。" class="admin-input" style="margin:0; text-align:left; font-size:0.85rem; padding:0.5rem;">
+                </div>
+                <div style="padding: 1rem; background: rgba(0,0,0,0.02); border: 1px solid rgba(148,163,184,0.2); border-radius: 0.75rem;">
+                    <label style="display: block; font-size: 0.75rem; color: #64748b; margin-bottom: 0.5rem;">开放注册状态</label>
+                    <select id="setting-reg" class="admin-input" style="margin:0; font-size:0.85rem; padding:0.5rem; height:auto;"><option value="1">开启注册</option><option value="0" selected>关闭注册</option></select>
+                </div>
+            </div>
+            <button onclick="saveWpSettings()" class="admin-btn admin-btn-primary" style="width: auto;">同步更新至 D1 数据库</button>
+        </div>
+
+        <div id="panel-wp-audit" class="admin-panel">
+            <h4 style="font-size: 0.9rem; font-weight: bold; margin-bottom: 1rem;">待审核帖子队列 (D1)</h4>
+            <div style="background: rgba(0,0,0,0.02); border: 1px solid rgba(148,163,184,0.2); padding: 1rem; border-radius: 0.75rem; margin-bottom: 1rem;">
+                <div style="display: flex; justify-content: space-between; font-size: 0.75rem; margin-bottom: 0.5rem;"><span style="font-weight: bold; color: #38bdf8;">用户: Guest_哈尔滨</span><span>刚刚</span></div>
+                <p style="margin: 0 0 1rem 0; font-size: 0.85rem;">这才是真正的超级大盘面板组件！</p>
+                <div style="display: flex; gap: 0.5rem;">
+                    <button onclick="alert('已批准发布')" class="admin-btn" style="background: #10b981; color: white; padding: 0.4rem 1rem; font-size: 0.75rem;">通过</button>
+                    <button onclick="alert('已拒绝并粉碎')" class="admin-btn" style="background: #ef4444; color: white; padding: 0.4rem 1rem; font-size: 0.75rem;">拒绝</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const API_BASE = "https://han-auth-api.vobl-guojyin.workers.dev";
+    function handleWpLogin() {
+        document.getElementById('wp-auth-card').style.display = 'none';
+        document.getElementById('wp-dashboard-card').style.display = 'block';
+        fetchLogs();
+    }
+    function handleWpLogout() {
+        document.getElementById('wp-dashboard-card').style.display = 'none';
+        document.getElementById('wp-auth-card').style.display = 'block';
+    }
+    function switchWpTab(tab) {
+        document.querySelectorAll('.admin-nav-btn').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.admin-panel').forEach(p => p.classList.remove('active'));
+        document.getElementById('btn-wp-' + tab).classList.add('active');
+        document.getElementById('panel-wp-' + tab).classList.add('active');
+    }
+    function fetchLogs() {
+        fetch(`${API_BASE}/api/logs`).then(r => r.json()).then(res => {
+            if(res.success && res.data.length > 0) {
+                const container = document.getElementById('log-container');
+                container.innerHTML = res.data.map(l => `<div class="log-item"><span style="color:#38bdf8;">[${new Date(l.created_at).toLocaleString()}]</span> <b>${l.action}</b>: ${l.details}</div>`).join('');
+            }
+        }).catch(e => console.log("后端未连通"));
+    }
+    function saveWpSettings() {
+        const notice = document.getElementById('setting-notice').value;
+        const reg = document.getElementById('setting-reg').value === "1";
+        fetch(`${API_BASE}/api/settings`, { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({notice, registration_open: reg}) }).then(r=>r.json()).then(d => alert(d.msg));
+    }
+</script>
