@@ -3,28 +3,15 @@ languageCode = "zh-cn"
 title = "Han's Blog"
 theme = "stack"
 
-[author]
-    name = "Han"
-    intro = "欢迎来到我的网站，此博客由【Hugo + Stack】来进行搭建，主要分享个人生活和学习笔记"
-    avatar = "https://ui-avatars.com/api/?name=Han&background=random&size=256"
-
 [params.colorScheme]
     toggle = true
     default = "auto"
 
 [params.sidebar]
     emoji = "🤔"
-    subtitle = "欢迎来到我的网站，此博客由【Hugo + Stack】来进行搭建，主要分享个人生活和学习笔记"
-    avatar = "https://ui-avatars.com/api/?name=Han&background=random&size=256"
+    subtitle = "记录学习，分享生活"
 
 [[menu.social]]
     name = "GitHub"
-    weight = 1
-    identifier = "github"
     url = "https://github.com/"
-
-[[menu.social]]
-    name = "Bilibili"
-    weight = 2
-    identifier = "bilibili"
-    url = "https://bilibili.com/"
+    identifier = "github"
